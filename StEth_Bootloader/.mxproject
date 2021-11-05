@@ -1,7 +1,7 @@
 [PreviousGenFiles]
-HeaderPath=C:/Users/lsa/workspace/_dev/p/ShEth_Boot/ShEth_Bootloader/Inc
+HeaderPath=D:/Sync/Projekte/MSE/StEth-Boot/StEth_Bootloader/Inc
 HeaderFiles=gpio.h;crc.h;spi.h;stm32f1xx_it.h;stm32f1xx_hal_conf.h;main.h;stm32_assert.h;
-SourcePath=C:/Users/lsa/workspace/_dev/p/ShEth_Boot/ShEth_Bootloader/Src
+SourcePath=D:/Sync/Projekte/MSE/StEth-Boot/StEth_Bootloader/Src
 SourceFiles=gpio.c;crc.c;spi.c;stm32f1xx_it.c;stm32f1xx_hal_msp.c;main.c;
 
 [PreviousLibFiles]
