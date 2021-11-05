@@ -1,19 +1,28 @@
 #include "ethernet.h"
 
 void spiStart() {
-  __HAL_SPI_ENABLE(&ETH_SPI);
+  // __HAL_SPI_ENABLE(&ETH_SPI);
+  LL_SPI_Enable(ETH_SPI);
 }
 
 void spiStop() {
-  __HAL_SPI_DISABLE(&ETH_SPI);
+  LL_SPI_Disable(ETH_SPI);
 }
 
 void spiWrite(uint8_t* buf, uint16_t len) {
-  HAL_SPI_Transmit(&ETH_SPI, buf, len, HAL_MAX_DELAY);
+  // HAL_SPI_Transmit(&ETH_SPI, buf, len, HAL_MAX_DELAY);
+  for (uint16_t i = 0; i < len; i++) {
+    while (LL_SPI_IsActiveFlag_TXE(ETH_SPI) == 0);  // block until TX buffer is empty again
+    LL_SPI_TransmitData8(ETH_SPI, buf[i]);
+  }
 }
 
 void spiRead(uint8_t* buf, uint16_t len) {
-  HAL_SPI_Receive(&ETH_SPI, buf, len, HAL_MAX_DELAY);
+  // HAL_SPI_Receive(&ETH_SPI, buf, len, HAL_MAX_DELAY);
+  for (uint16_t i = 0; i < len; i++) {
+    while (LL_SPI_IsActiveFlag_RXNE(ETH_SPI) == 0); // block until RX buffer contains data
+    buf[i] = LL_SPI_ReceiveData8(ETH_SPI);
+  }
 }
 
 void spiWriteByte(uint8_t byte) {
@@ -29,7 +38,8 @@ uint8_t spiReadByte() {
 
 void generateMAC(uint8_t* macArray) {
   uint32_t uid[3];
-  HAL_GetUID(uid);
+  // HAL_GetUID(uid);
+  memcpy(uid, (uint8_t *)UID_BASE, sizeof(uid));
   macArray[0] = 0x42;
   macArray[1] = (uid[0] >> 0) & 0xFF;
   macArray[2] = (uid[0] >> 8) & 0xFF;
@@ -76,7 +86,7 @@ void cbkIPConflict() {
 void doDHCP() {
   prevEthState = ethState;
   ethState = ETH_DHCP_STARTED;
-  dhcpStarted = HAL_GetTick();
+  dhcpStarted = getTick();
 
   printf("Beginning DHCP...\n");
 
@@ -172,12 +182,12 @@ void loopEthernet() {
   }
 
 
-  if(HAL_GetTick() > lastDhcpTick + 1000) {
-    lastDhcpTick = HAL_GetTick();
+  if(getTick() > lastDhcpTick + 1000) {
+    lastDhcpTick = getTick();
     DHCP_time_handler();
 
     if(ethState == ETH_DHCP_STARTED) {
-      uint8_t dot = (HAL_GetTick() - dhcpStarted - 500) / 1000;
+      uint8_t dot = (getTick() - dhcpStarted - 500) / 1000;
     }
   }
 }
