@@ -1,7 +1,9 @@
 #include "ethernet.h"
+#include <stdio.h>
+#include "util.h"
+#include "string.h"
 
 void spiStart() {
-  // __HAL_SPI_ENABLE(&ETH_SPI);
   LL_SPI_Enable(ETH_SPI);
 }
 
@@ -10,17 +12,27 @@ void spiStop() {
 }
 
 void spiWrite(uint8_t* buf, uint16_t len) {
-  // HAL_SPI_Transmit(&ETH_SPI, buf, len, HAL_MAX_DELAY);
   for (uint16_t i = 0; i < len; i++) {
-    while (LL_SPI_IsActiveFlag_TXE(ETH_SPI) == 0);  // block until TX buffer is empty again
+    while (!LL_SPI_IsActiveFlag_TXE(ETH_SPI));    // block until TX buffer is empty again
     LL_SPI_TransmitData8(ETH_SPI, buf[i]);
+    while (!LL_SPI_IsActiveFlag_RXNE(ETH_SPI));   // dummy read return value
+    (void)LL_SPI_ReceiveData8(SPI1);
   }
+
+  DWT_Delay_us(10); // don't know why, but needs the delay here
 }
 
 void spiRead(uint8_t* buf, uint16_t len) {
-  // HAL_SPI_Receive(&ETH_SPI, buf, len, HAL_MAX_DELAY);
+  if (LL_SPI_IsActiveFlag_RXNE(ETH_SPI)) {  // if SPI RX buffer contains data, do dummy read
+    LL_SPI_ReceiveData8(ETH_SPI);
+  }
+  uint32_t timeout = getTick() + 50; // 50ms timeout
   for (uint16_t i = 0; i < len; i++) {
-    while (LL_SPI_IsActiveFlag_RXNE(ETH_SPI) == 0); // block until RX buffer contains data
+    while (!LL_SPI_IsActiveFlag_TXE(ETH_SPI));  // block until TX buffer is empty again
+    LL_SPI_TransmitData8(ETH_SPI, 0); // send dummy data to receive from device
+    while (!LL_SPI_IsActiveFlag_RXNE(ETH_SPI)) { // block until RX buffer contains data
+      if (getTick() > timeout) return;  // simply break out of loop if nothing is received in time
+    } 
     buf[i] = LL_SPI_ReceiveData8(ETH_SPI);
   }
 }
@@ -103,6 +115,7 @@ void initEthernet() {
   ethState = ETH_UNINITIALIZED;
   prevEthState = ethState;
   printf("Initializing Ethernet...");
+  fflush(stdout);
   
   reg_wizchip_cs_cbfunc(&spiStart, &spiStop);
   reg_wizchip_spi_cbfunc(&spiReadByte, &spiWriteByte);

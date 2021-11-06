@@ -22,6 +22,7 @@
 #include "main.h"
 #include "crc.h"
 #include "spi.h"
+#include "usart.h"
 #include "gpio.h"
 
 /* Private includes ----------------------------------------------------------*/
@@ -29,6 +30,10 @@
 
 #include "ethernet.h"
 #include "bootloader.h"
+#include "util.h"
+#include <errno.h>
+#include <sys/unistd.h>
+#include <stdio.h>
 
 /* USER CODE END Includes */
 
@@ -60,6 +65,30 @@ void SystemClock_Config(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+
+#ifdef PRINTF_UART
+// enable printf functionality on PRINTF_UART
+int _write(int file, char *data, int len) {
+  if ((file != STDOUT_FILENO) && (file != STDERR_FILENO)) {
+    errno = EBADF;
+    return -1;
+  }
+
+  // HAL_StatusTypeDef status = HAL_UART_Transmit(&PRINTF_UART, (uint8_t *)data, len, 1000);
+
+  const uint8_t* b = data;
+  while (len--) {
+    LL_USART_TransmitData8(USART1, *b++);
+        
+    while (!LL_USART_IsActiveFlag_TXE(PRINTF_UART)){
+        // transmit_empty_register=LL_USART_IsActiveFlag_TXE(PRINTF_UART);
+        // transfer_complete=LL_USART_IsActiveFlag_TC(PRINTF_UART);
+        //LL_USART_ClearFlag_PE(USART1);
+      }
+    }
+  // return (status == HAL_OK ? len : 0);
+}
+#endif
 
 /* USER CODE END 0 */
 
@@ -104,9 +133,18 @@ int main(void)
   MX_GPIO_Init();
   MX_SPI2_Init();
   MX_CRC_Init();
+  MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
+
+  LL_SYSTICK_EnableIT();
+
+  DWT_Delay_Init();
+  
+  printf("Ethernet bootloader init...\n\n");
+  printf("F_CPU: %ld\n", F_CPU);
   initEthernet();
   bootloaderInit();
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
