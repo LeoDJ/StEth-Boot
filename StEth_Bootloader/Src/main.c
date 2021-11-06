@@ -28,6 +28,7 @@
 /* USER CODE BEGIN Includes */
 
 #include "ethernet.h"
+#include "bootloader.h"
 
 /* USER CODE END Includes */
 
@@ -105,6 +106,7 @@ int main(void)
   MX_CRC_Init();
   /* USER CODE BEGIN 2 */
   initEthernet();
+  bootloaderInit();
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -131,14 +133,15 @@ void SystemClock_Config(void)
   {
     Error_Handler();  
   }
-  LL_RCC_HSE_Enable();
+  LL_RCC_HSI_SetCalibTrimming(16);
+  LL_RCC_HSI_Enable();
 
-   /* Wait till HSE is ready */
-  while(LL_RCC_HSE_IsReady() != 1)
+   /* Wait till HSI is ready */
+  while(LL_RCC_HSI_IsReady() != 1)
   {
     
   }
-  LL_RCC_PLL_ConfigDomain_SYS(LL_RCC_PLLSOURCE_HSE_DIV_1, LL_RCC_PLL_MUL_9);
+  LL_RCC_PLL_ConfigDomain_SYS(LL_RCC_PLLSOURCE_HSI_DIV_2, LL_RCC_PLL_MUL_16);
   LL_RCC_PLL_Enable();
 
    /* Wait till PLL is ready */
@@ -156,8 +159,8 @@ void SystemClock_Config(void)
   {
   
   }
-  LL_Init1msTick(72000000);
-  LL_SetSystemCoreClock(72000000);
+  LL_Init1msTick(64000000);
+  LL_SetSystemCoreClock(64000000);
 }
 
 /* USER CODE BEGIN 4 */

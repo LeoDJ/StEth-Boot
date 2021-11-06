@@ -12,3 +12,4 @@
 // extern SPI_TypeDef          SPI2
 #define SPI2_NSS            GPIOB, GPIO_PIN_12
 #define SOCKET_DHCP         0
+#define SOCKET_TFTP         7
