@@ -1,4 +1,6 @@
 #include "ethernet.h"
+#include <stdio.h>
+#include <string.h>
 
 void spiStart() {
   __HAL_SPI_ENABLE(&ETH_SPI);
@@ -29,7 +31,7 @@ uint8_t spiReadByte() {
 
 void generateMAC(uint8_t* macArray) {
   uint32_t uid[3];
-  HAL_GetUID(uid);
+  memcpy(uid, (uint8_t *)UID_BASE, sizeof(uid));
   macArray[0] = 0x42;
   macArray[1] = (uid[0] >> 0) & 0xFF;
   macArray[2] = (uid[0] >> 8) & 0xFF;
