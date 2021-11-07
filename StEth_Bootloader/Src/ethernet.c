@@ -1,7 +1,8 @@
 #include "ethernet.h"
 #include <stdio.h>
+#include <string.h>
 #include "util.h"
-#include "string.h"
+#include "bootloader.h"
 
 void spiStart() {
   LL_SPI_Enable(ETH_SPI);
@@ -183,7 +184,7 @@ void loopEthernet() {
 
     case ETH_IP_ASSIGNED:
       if(prevEthState != ETH_IP_ASSIGNED) { // if freshly initialized
-      
+        bootloaderRequestFile();
       }
 
       prevEthState = ethState;

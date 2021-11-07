@@ -152,6 +152,7 @@ int main(void)
   while (1)
   {
       loopEthernet();
+      bootloaderLoop();
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */

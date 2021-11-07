@@ -15,3 +15,5 @@
 #define SOCKET_TFTP         7
 
 #define PRINTF_UART         USART1
+
+#define TFTP_SERVER         192,168,137,1
